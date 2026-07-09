@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Taylor Alterations & More LLC — Request Services</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet"/>
+  <style>
+    :root{--teal:#2a8a8a;--teal-dark:#1d6b6b;--teal-light:#e6f4f4;--accent:#c4783c;--accent-light:#fdf0e6;--cream:#faf9f7;--white:#fff;--border:#e8e3dc;--text:#2c2c2c;--muted:#7a7a7a;--success:#2e7d32;--success-light:#e8f5e9;}
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Lato',sans-serif;background:var(--cream);color:var(--text);min-height:100vh;}
+
+    /* HERO */
+    .hero{background:linear-gradient(135deg,var(--teal-dark),var(--teal));padding:32px 20px 24px;text-align:center;color:#fff;}
+    .hero-logo{font-size:44px;margin-bottom:8px;}
+    .hero h1{font-family:'Playfair Display',serif;font-size:26px;margin-bottom:6px;}
+    .hero p{font-size:13px;opacity:0.85;margin-bottom:4px;line-height:1.5;}
+    .hero .phone{font-size:15px;font-weight:700;margin-top:8px;}
+
+    /* SERVICE TYPE TOGGLE */
+    .type-toggle{display:flex;gap:0;background:var(--white);border-radius:14px;border:1.5px solid var(--border);overflow:hidden;margin-bottom:16px;box-shadow:0 2px 10px rgba(0,0,0,0.07);}
+    .type-btn{flex:1;padding:14px 10px;border:none;background:none;font-family:'Lato',sans-serif;font-size:13px;font-weight:700;cursor:pointer;color:var(--muted);transition:all 0.2s;display:flex;flex-direction:column;align-items:center;gap:4px;border-right:1px solid var(--border);}
+    .type-btn:last-child{border-right:none;}
+    .type-btn.active{background:var(--teal);color:#fff;}
+    .type-btn span{font-size:22px;}
+    .type-btn small{font-size:10px;letter-spacing:0.5px;text-transform:uppercase;opacity:0.8;}
+
+    .wrap{max-width:560px;margin:0 auto;padding:20px 16px 48px;}
+    .card{background:var(--white);border-radius:16px;border:1.5px solid var(--border);padding:20px;margin-bottom:16px;box-shadow:0 2px 12px rgba(0,0,0,0.07);}
+    .card-title{font-family:'Playfair Display',serif;font-size:17px;color:var(--teal-dark);margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;}
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+    .form-group{display:flex;flex-direction:column;gap:5px;}
+    .form-group.full{grid-column:1/-1;}
+    label{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:1px;text-transform:uppercase;}
+    input,select,textarea{font-family:'Lato',sans-serif;border:1.5px solid var(--border);border-radius:10px;padding:10px 13px;font-size:14px;background:var(--white);color:var(--text);outline:none;width:100%;transition:border-color 0.2s;}
+    input:focus,select:focus,textarea:focus{border-color:var(--teal);}
+    textarea{resize:vertical;min-height:80px;}
+
+
+
+    /* QTY COUNTER */
+    .qty-counter-card{background:var(--teal-light);border:1.5px solid var(--teal);border-radius:12px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:14px;}
+    .qty-counter-left{flex:1;}
+    .qty-counter-label{font-weight:700;font-size:15px;color:var(--teal-dark);}
+    .qty-counter-sublabel{font-size:12px;color:var(--muted);margin-top:2px;}
+    .qty-counter-right{display:flex;align-items:center;gap:12px;}
+    .qty-counter-btn{width:36px;height:36px;border-radius:50%;border:2px solid var(--teal);font-size:20px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:"Lato",sans-serif;transition:all 0.15s;line-height:1;}
+    .qty-counter-btn.minus{background:var(--white);color:var(--teal);}
+    .qty-counter-btn.minus:hover{background:var(--teal);color:#fff;}
+    .qty-counter-btn.plus{background:var(--teal);color:#fff;}
+    .qty-counter-btn.plus:hover{opacity:0.85;}
+    .qty-counter-num{font-family:"Playfair Display",serif;font-size:28px;font-weight:700;color:var(--teal);min-width:32px;text-align:center;}
+    .qty-total-row{display:flex;justify-content:space-between;align-items:center;background:var(--white);border:1.5px solid var(--border);border-radius:10px;padding:10px 16px;margin-top:8px;font-size:13px;color:var(--muted);}
+    .qty-total-amt{font-weight:700;color:var(--teal);font-family:"Playfair Display",serif;font-size:18px;}
+
+    /* ALTERATION ICON CARDS */
+    .alt-section-label{font-size:11px;font-weight:900;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;}
+    .icon-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:4px;}
+    .icon-card{background:var(--cream);border:2px solid var(--border);border-radius:12px;padding:12px 6px;text-align:center;cursor:pointer;transition:all 0.15s;}
+    .icon-card:hover{border-color:var(--teal);background:var(--teal-light);}
+    .icon-card.selected{border-color:var(--teal);background:var(--teal-light);}
+    .icon-card-emoji{font-size:26px;margin-bottom:5px;}
+    .icon-card-name{font-size:11px;font-weight:700;color:var(--text);line-height:1.3;}
+    .icon-card.selected .icon-card-name{color:var(--teal-dark);}
+
+    /* SERVICE LIST */
+    .svc-icon-list{display:flex;flex-direction:column;background:var(--white);border-radius:14px;border:1.5px solid var(--border);overflow:hidden;}
+    .svc-icon-item{display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid #f0ebe4;cursor:pointer;transition:background 0.12s;}
+    .svc-icon-item:last-child{border-bottom:none;}
+    .svc-icon-item:hover{background:var(--teal-light);}
+    .svc-icon-item.selected{background:var(--teal-light);}
+    .svc-icon-emoji{font-size:22px;width:40px;height:40px;display:flex;align-items:center;justify-content:center;background:var(--cream);border-radius:10px;border:1.5px solid var(--border);flex-shrink:0;}
+    .svc-icon-item.selected .svc-icon-emoji{background:var(--teal);border-color:var(--teal);}
+    .svc-icon-info{flex:1;}
+    .svc-icon-name{font-weight:700;font-size:14px;color:var(--text);margin-bottom:1px;}
+    .svc-icon-item.selected .svc-icon-name{color:var(--teal-dark);}
+    .svc-icon-desc{font-size:11px;color:var(--muted);}
+    .svc-icon-price{font-weight:700;color:var(--accent);font-size:14px;flex-shrink:0;}
+    .svc-icon-item.selected .svc-icon-price{color:var(--teal);}
+
+    /* CUSTOM SEWING ITEMS */
+    .sewing-grid{display:flex;flex-direction:column;gap:10px;}
+    .sewing-item{background:var(--cream);border-radius:12px;border:1.5px solid var(--border);padding:14px 16px;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;gap:14px;}
+    .sewing-item:hover{border-color:var(--teal);background:var(--teal-light);}
+    .sewing-item.selected{border-color:var(--teal);background:var(--teal-light);}
+    .sewing-item-icon{width:44px;height:44px;border-radius:12px;background:var(--white);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;border:1.5px solid var(--border);transition:all 0.15s;}
+    .sewing-item.selected .sewing-item-icon{background:var(--teal);border-color:var(--teal);}
+    .sewing-item-info{flex:1;}
+    .sewing-item-name{font-weight:700;font-size:15px;color:var(--text);margin-bottom:2px;}
+    .sewing-item-desc{font-size:12px;color:var(--muted);}
+    .sewing-item-price{text-align:right;}
+    .sewing-price-main{font-family:'Playfair Display',serif;font-size:17px;font-weight:700;color:var(--accent);line-height:1.2;}
+    .sewing-item.selected .sewing-price-main{color:var(--teal);}
+    .sewing-price-sub{font-size:10px;color:var(--muted);}
+
+    /* LETTER COUNT for baby banner */
+    .letter-count-row{background:var(--white);border-radius:10px;border:1.5px solid var(--teal);padding:12px 14px;margin-top:8px;display:none;align-items:center;gap:12px;}
+    .letter-count-row.show{display:flex;}
+    .letter-count-label{font-size:13px;color:var(--teal-dark);font-weight:700;flex:1;}
+    .letter-ctrl{display:flex;align-items:center;gap:10px;}
+    .letter-btn{width:30px;height:30px;border-radius:50%;border:2px solid var(--teal);font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;background:var(--white);color:var(--teal);font-family:'Lato',sans-serif;}
+    .letter-btn.plus{background:var(--teal);color:#fff;}
+    .letter-count-num{font-weight:700;color:var(--teal);font-size:16px;min-width:24px;text-align:center;}
+    .letter-est{font-size:12px;color:var(--teal);font-weight:700;}
+
+    /* ESTIMATE BOX */
+    .est-box{background:#fffde7;border:1.5px solid #f9a825;border-radius:12px;padding:16px;margin-top:14px;display:none;}
+    .est-title{font-weight:700;color:#f57f17;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;}
+    .est-line{display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;}
+    .est-total{display:flex;justify-content:space-between;font-weight:700;font-size:16px;border-top:1.5px solid #f9a825;padding-top:10px;margin-top:6px;color:var(--teal-dark);}
+
+    /* CUSTOM SEWING ESTIMATE */
+    .sewing-est{background:var(--teal-light);border:1.5px solid var(--teal);border-radius:12px;padding:16px;margin-top:14px;display:none;}
+    .sewing-est-title{font-weight:700;color:var(--teal-dark);font-size:12px;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;}
+    .sewing-est-line{display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;color:var(--text);}
+    .sewing-est-total{display:flex;justify-content:space-between;font-weight:700;font-size:16px;border-top:1.5px solid var(--teal);padding-top:10px;margin-top:6px;color:var(--teal-dark);}
+
+    /* BUTTONS */
+    .btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:15px;border-radius:12px;border:none;font-family:'Lato',sans-serif;font-size:16px;font-weight:700;cursor:pointer;transition:all 0.15s;}
+    .btn-accent{background:linear-gradient(135deg,var(--accent),#a8622e);color:#fff;box-shadow:0 4px 14px rgba(196,120,60,0.4);}
+    .btn-accent:hover{opacity:0.9;transform:translateY(-1px);}
+    .btn:disabled{opacity:0.5;cursor:not-allowed;transform:none!important;}
+
+    /* SUCCESS */
+    .success{background:var(--success-light);border:1.5px solid #a5d6a7;border-radius:16px;padding:32px 20px;text-align:center;display:none;}
+    .success.show{display:block;}
+    .success-icon{font-size:56px;margin-bottom:12px;}
+    .success h2{font-family:'Playfair Display',serif;color:var(--success);font-size:22px;margin-bottom:8px;}
+    .success p{color:#388e3c;font-size:14px;line-height:1.6;}
+
+    .err{color:#c62828;font-size:12px;margin-top:6px;display:none;}
+    .hidden{display:none!important;}
+
+    /* DROP-OFF OPTIONS */
+    .dropoff-opt{display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:12px;border:2px solid var(--border);background:var(--cream);cursor:pointer;transition:all 0.15s;}
+    .dropoff-opt:hover{border-color:var(--teal);background:var(--teal-light);}
+    .dropoff-opt.selected{border-color:var(--teal);background:var(--teal-light);}
+    .dropoff-icon{font-size:28px;width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:var(--white);border-radius:12px;border:1.5px solid var(--border);flex-shrink:0;}
+    .dropoff-opt.selected .dropoff-icon{background:var(--teal-light);border-color:var(--teal);}
+    .dropoff-info{flex:1;}
+    .dropoff-name{font-weight:700;font-size:15px;color:var(--text);margin-bottom:2px;}
+    .dropoff-desc{font-size:12px;color:var(--muted);line-height:1.5;}
+    .dropoff-check{width:22px;height:22px;border-radius:50%;border:2px solid #ccc;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;transition:all 0.15s;}
+    .dropoff-opt.selected .dropoff-check{background:var(--teal);border-color:var(--teal);}
+    .dropoff-opt.selected .dropoff-check::after{content:'✓';}
+    @media(max-width:480px){.form-grid{grid-template-columns:1fr;}}
+
+    /* RETURNING CLIENT */
+    .client-type-row{display:flex;gap:10px;margin-bottom:16px;}
+    .client-type-btn{flex:1;padding:12px 8px;border-radius:12px;border:2px solid var(--border);background:var(--cream);cursor:pointer;font-family:'Lato',sans-serif;font-size:13px;font-weight:700;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:4px;transition:all 0.15s;}
+    .client-type-btn:hover{border-color:var(--teal);background:var(--teal-light);}
+    .client-type-btn.active{border-color:var(--teal);background:var(--teal-light);color:var(--teal);}
+    .client-type-btn span{font-size:24px;}
+
+    /* PHOTO UPLOAD */
+    .photo-upload-area{border:2px dashed var(--border);border-radius:14px;padding:24px 16px;text-align:center;cursor:pointer;transition:all 0.15s;background:var(--cream);position:relative;}
+    .photo-upload-area:hover{border-color:var(--teal);background:var(--teal-light);}
+    .photo-upload-area.has-photo{border-color:var(--teal);border-style:solid;background:var(--teal-light);}
+    .photo-upload-icon{font-size:36px;margin-bottom:8px;}
+    .photo-upload-label{font-weight:700;font-size:14px;color:var(--teal-dark);margin-bottom:4px;}
+    .photo-upload-sub{font-size:12px;color:var(--muted);}
+    .photo-preview-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px;}
+    .photo-preview-item{position:relative;border-radius:10px;overflow:hidden;aspect-ratio:1;}
+    .photo-preview-item img{width:100%;height:100%;object-fit:cover;}
+    .photo-remove-btn{position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.6);color:#fff;border:none;border-radius:50%;width:22px;height:22px;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;}
+  </style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-logo">🧵</div>
+  <h1>Taylor Alterations & More LLC</h1>
+  <p>Professional alterations · Wedding & formal attire · Custom sewing</p>
+  <div class="phone">📞 601-325-4514</div>
+</div>
+
+<div class="wrap">
+  <div id="form-wrap">
+
+    <!-- SERVICE TYPE TOGGLE -->
+    <div class="type-toggle">
+      <button class="type-btn active" id="btn-alterations" onclick="switchType('alterations')">
+        <span>✂️</span>Alterations<small>Garment Work</small>
+      </button>
+      <button class="type-btn" id="btn-custom" onclick="switchType('custom')">
+        <span>🎀</span>Custom Sewing<small>Décor & More</small>
+      </button>
+      <button class="type-btn" id="btn-both" onclick="switchType('both')">
+        <span>✨</span>Both<small>Combo Request</small>
+      </button>
+    </div>
+
+    <!-- CLIENT INFO (always shown) -->
+    <div class="card">
+      <div class="card-title">👤 Your Information</div>
+
+      <!-- RETURNING OR NEW CLIENT -->
+      <div class="client-type-row">
+        <button class="client-type-btn active" id="ctype-new" onclick="setClientType('new')">
+          <span>👋</span>New Client
+        </button>
+        <button class="client-type-btn" id="ctype-returning" onclick="setClientType('returning')">
+          <span>🔄</span>Returning Client
+        </button>
+      </div>
+      <!-- Returning client welcome (hidden by default) -->
+      <div id="returning-msg" style="display:none;background:var(--teal-light);border:1.5px solid var(--teal);border-radius:12px;padding:12px 16px;margin-bottom:14px;font-size:13px;color:var(--teal-dark);">
+        👋 <strong>Welcome back!</strong> We're so glad you're back. Fill in your info below and Anita will have your history on file.
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group"><label>First Name *</label><input id="fname" placeholder="First name"/></div>
+        <div class="form-group"><label>Last Name *</label><input id="lname" placeholder="Last name"/></div>
+        <div class="form-group"><label>Phone *</label><input id="phone" type="tel" placeholder="(601) 000-0000"/></div>
+        <div class="form-group"><label>Email</label><input id="email" type="email" placeholder="your@email.com"/></div>
+      </div>
+    </div>
+
+    <!-- ALTERATION DETAILS -->
+    <div class="card" id="alteration-card">
+      <div class="card-title">✂️ Alteration Details</div>
+
+      <!-- STEP 1: GARMENT TYPE -->
+      <div class="alt-section-label">What type of garment? *</div>
+      <div class="icon-grid" id="garment-grid">
+        <div class="icon-card" data-val="pants" onclick="selectGarment('pants',this)">
+          <div class="icon-card-emoji">👖</div>
+          <div class="icon-card-name">Pants / Jeans</div>
+        </div>
+        <div class="icon-card" data-val="dress" onclick="selectGarment('dress',this)">
+          <div class="icon-card-emoji">👗</div>
+          <div class="icon-card-name">Dress / Skirt</div>
+        </div>
+        <div class="icon-card" data-val="wedding" onclick="selectGarment('wedding',this)">
+          <div class="icon-card-emoji">👰</div>
+          <div class="icon-card-name">Wedding Dress</div>
+        </div>
+        <div class="icon-card" data-val="formal" onclick="selectGarment('formal',this)">
+          <div class="icon-card-emoji">💃</div>
+          <div class="icon-card-name">Formal / Evening</div>
+        </div>
+        <div class="icon-card" data-val="jacket" onclick="selectGarment('jacket',this)">
+          <div class="icon-card-emoji">🧥</div>
+          <div class="icon-card-name">Jacket / Blazer</div>
+        </div>
+        <div class="icon-card" data-val="shirt" onclick="selectGarment('shirt',this)">
+          <div class="icon-card-emoji">👕</div>
+          <div class="icon-card-name">Shirt / Blouse</div>
+        </div>
+        <div class="icon-card" data-val="other" onclick="selectGarment('other',this)">
+          <div class="icon-card-emoji">🪡</div>
+          <div class="icon-card-name">Other</div>
+        </div>
+      </div>
+
+      <!-- STEP 2: SERVICE (shown after garment selected) -->
+      <div id="service-section" style="display:none;">
+        <div style="height:1px;background:var(--border);margin:16px 0;"></div>
+        <div class="alt-section-label">What service do you need? *</div>
+        <div class="svc-icon-list" id="service-list">
+          <div class="svc-icon-item" data-val="hem" data-est="15" onclick="selectService('hem','Hem (shorten length)',15,this)">
+            <div class="svc-icon-emoji">📏</div>
+            <div class="svc-icon-info">
+              <div class="svc-icon-name">Hem</div>
+              <div class="svc-icon-desc">Shorten length</div>
+            </div>
+            <div class="svc-icon-price">$15+</div>
+          </div>
+          <div class="svc-icon-item" data-val="takein" data-est="25" onclick="selectService('takein','Take In / Let Out',25,this)">
+            <div class="svc-icon-emoji">📐</div>
+            <div class="svc-icon-info">
+              <div class="svc-icon-name">Take In / Let Out</div>
+              <div class="svc-icon-desc">Resize the fit</div>
+            </div>
+            <div class="svc-icon-price">$25+</div>
+          </div>
+          <div class="svc-icon-item" data-val="zipper" data-est="25" onclick="selectService('zipper','Zipper Replacement',25,this)">
+            <div class="svc-icon-emoji">🤐</div>
+            <div class="svc-icon-info">
+              <div class="svc-icon-name">Zipper Replacement</div>
+              <div class="svc-icon-desc">Fix or replace zipper</div>
+            </div>
+            <div class="svc-icon-price">$20+</div>
+          </div>
+          <div class="svc-icon-item" data-val="bustle" data-est="50" onclick="selectService('bustle','Bustle',50,this)">
+            <div class="svc-icon-emoji">🌸</div>
+            <div class="svc-icon-info">
+              <div class="svc-icon-name">Bustle</div>
+              <div class="svc-icon-desc">Wedding dress bustle</div>
+            </div>
+            <div class="svc-icon-price">$50+</div>
+          </div>
+          <div class="svc-icon-item" data-val="bodice" data-est="60" onclick="selectService('bodice','Bodice Alterations',60,this)">
+            <div class="svc-icon-emoji">🎀</div>
+            <div class="svc-icon-info">
+              <div class="svc-icon-name">Bodice Alterations</div>
+              <div class="svc-icon-desc">Reshape the bodice</div>
+            </div>
+            <div class="svc-icon-price">$60+</div>
+          </div>
+          <div class="svc-icon-item" data-val="waistband" data-est="30" onclick="selectService('waistband','Waistband Adjustment',30,this)">
+            <div class="svc-icon-emoji">⭕</div>
+            <div class="svc-icon-info">
+              <div class="svc-icon-name">Waistband Adjustment</div>
+              <div class="svc-icon-desc">Resize waistband</div>
+            </div>
+            <div class="svc-icon-price">$30+</div>
+          </div>
+          <div class="svc-icon-item" data-val="repair" data-est="20" onclick="selectService('repair','Repair / Mending',20,this)">
+            <div class="svc-icon-emoji">🧵</div>
+            <div class="svc-icon-info">
+              <div class="svc-icon-name">Repair / Mending</div>
+              <div class="svc-icon-desc">Fix tears, seams, holes</div>
+            </div>
+            <div class="svc-icon-price">$20+</div>
+          </div>
+          <div class="svc-icon-item" data-val="custom" data-est="0" onclick="selectService('custom','Custom / Not Sure',0,this)">
+            <div class="svc-icon-emoji">💡</div>
+            <div class="svc-icon-info">
+              <div class="svc-icon-name">Custom / Not Sure</div>
+              <div class="svc-icon-desc">Describe in notes below</div>
+            </div>
+            <div class="svc-icon-price">TBD</div>
+          </div>
+        </div>
+
+        <!-- QTY + URGENCY -->
+        <div id="qty-urgency-section" style="display:none;margin-top:14px;">
+          <div style="height:1px;background:var(--border);margin-bottom:14px;"></div>
+
+          <!-- QTY COUNTER -->
+          <div class="qty-counter-card">
+            <div class="qty-counter-left">
+              <div class="qty-counter-label">How many items?</div>
+              <div class="qty-counter-sublabel" id="qty-price-each"></div>
+            </div>
+            <div class="qty-counter-right">
+              <button class="qty-counter-btn minus" onclick="changeAltQty(-1)">−</button>
+              <span class="qty-counter-num" id="qty-display">1</span>
+              <button class="qty-counter-btn plus" onclick="changeAltQty(1)">+</button>
+            </div>
+          </div>
+          <input type="hidden" id="qty" value="1"/>
+
+          <!-- LIVE PRICE DISPLAY -->
+          <div class="qty-total-row" id="qty-total-row" style="display:none;">
+            <span id="qty-total-formula"></span>
+            <span class="qty-total-amt" id="qty-total-amt"></span>
+          </div>
+
+          <div class="form-grid" style="margin-top:14px;">
+            <div class="form-group">
+              <label>Urgency</label>
+              <select id="urgency">
+                <option value="standard">Standard (1–2 weeks)</option>
+                <option value="rush">Rush (3–5 days, +25%)</option>
+                <option value="super">Super Rush (1–2 days, +50%)</option>
+              </select>
+            </div>
+            <div class="form-group full">
+              <label>Notes / Special Instructions</label>
+              <textarea id="alt-notes" placeholder="Fabric type, measurements, any special concerns..."></textarea>
+            </div>
+          </div>
+
+          <!-- ESTIMATE -->
+          <div class="est-box" id="est-box">
+            <div class="est-title">💰 Starting Estimate</div>
+            <div id="est-lines"></div>
+            <div class="est-total"><span>Estimate</span><span id="est-total-amt">$0</span></div>
+            <p style="font-size:11px;color:#888;margin-top:8px">*Final pricing confirmed after garment inspection.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- hidden inputs to store selections -->
+      <input type="hidden" id="garment" value=""/>
+      <input type="hidden" id="service" value=""/>
+    </div>
+
+    <!-- CUSTOM SEWING PROJECTS -->
+    <div class="card hidden" id="custom-card">
+      <div class="card-title">🎀 Custom Sewing Projects</div>
+      <div class="sewing-grid">
+
+        <!-- DOOR WREATH SASH - NO EMBROIDERY -->
+        <div class="sewing-item" id="sew-wreath-plain" onclick="toggleSewing('wreath-plain')">
+          <div class="sewing-item-icon" id="sew-icon-wreath-plain">🎀</div>
+          <div class="sewing-item-info">
+            <div class="sewing-item-name">Door Wreath Sash</div>
+            <div class="sewing-item-desc">No embroidery — fabric sash only</div>
+          </div>
+          <div class="sewing-item-price">
+            <div class="sewing-price-main">$20</div>
+            <div class="sewing-price-sub">each</div>
+          </div>
+        </div>
+
+        <!-- DOOR WREATH SASH - ONE SIDE EMBROIDERY -->
+        <div class="sewing-item" id="sew-wreath-one" onclick="toggleSewing('wreath-one')">
+          <div class="sewing-item-icon" id="sew-icon-wreath-one">✨</div>
+          <div class="sewing-item-info">
+            <div class="sewing-item-name">Door Wreath Sash</div>
+            <div class="sewing-item-desc">One side embroidery</div>
+          </div>
+          <div class="sewing-item-price">
+            <div class="sewing-price-main">$28</div>
+            <div class="sewing-price-sub">each</div>
+          </div>
+        </div>
+
+        <!-- DOOR WREATH SASH - TWO SIDE EMBROIDERY -->
+        <div class="sewing-item" id="sew-wreath-two" onclick="toggleSewing('wreath-two')">
+          <div class="sewing-item-icon" id="sew-icon-wreath-two">🌟</div>
+          <div class="sewing-item-info">
+            <div class="sewing-item-name">Door Wreath Sash</div>
+            <div class="sewing-item-desc">Two sides embroidery</div>
+          </div>
+          <div class="sewing-item-price">
+            <div class="sewing-price-main">$35</div>
+            <div class="sewing-price-sub">each</div>
+          </div>
+        </div>
+
+        <!-- BABY BANNER NAME -->
+        <div class="sewing-item" id="sew-banner" onclick="toggleSewing('banner')">
+          <div class="sewing-item-icon" id="sew-icon-banner">👶</div>
+          <div class="sewing-item-info">
+            <div class="sewing-item-name">Baby Banner Name</div>
+            <div class="sewing-item-desc">Personalized letter banner</div>
+          </div>
+          <div class="sewing-item-price">
+            <div class="sewing-price-main">$7</div>
+            <div class="sewing-price-sub">per letter</div>
+          </div>
+        </div>
+        <!-- Letter count control for banner -->
+        <div class="letter-count-row" id="banner-letters">
+          <div class="letter-count-label">
+            How many letters?
+            <div class="letter-est" id="banner-est-text">$0 total</div>
+          </div>
+          <div class="letter-ctrl">
+            <button class="letter-btn" onclick="changeLetters(-1,event)">−</button>
+            <span class="letter-count-num" id="letter-count">1</span>
+            <button class="letter-btn plus" onclick="changeLetters(1,event)">+</button>
+          </div>
+        </div>
+
+        <!-- BABY SWADDLE SASH -->
+        <div class="sewing-item" id="sew-swaddle" onclick="toggleSewing('swaddle')">
+          <div class="sewing-item-icon" id="sew-icon-swaddle">🌸</div>
+          <div class="sewing-item-info">
+            <div class="sewing-item-name">Baby Swaddle Sash</div>
+            <div class="sewing-item-desc">Custom fabric sash for swaddle</div>
+          </div>
+          <div class="sewing-item-price">
+            <div class="sewing-price-main">$30</div>
+            <div class="sewing-price-sub">each</div>
+          </div>
+        </div>
+
+        <!-- OTHER CUSTOM -->
+        <div class="sewing-item" id="sew-other" onclick="toggleSewing('other')">
+          <div class="sewing-item-icon" id="sew-icon-other">💡</div>
+          <div class="sewing-item-info">
+            <div class="sewing-item-name">Other Custom Project</div>
+            <div class="sewing-item-desc">Something else — describe in notes</div>
+          </div>
+          <div class="sewing-item-price">
+            <div class="sewing-price-main">TBD</div>
+            <div class="sewing-price-sub">quote needed</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- QTY for non-banner items -->
+      <div id="sewing-qty-row" style="margin-top:14px;display:none;">
+        <div class="form-grid" style="grid-template-columns:1fr 1fr;gap:12px;">
+          <div class="form-group">
+            <label>Quantity</label>
+            <input id="sewing-qty" type="number" value="1" min="1" max="50" oninput="updateSewingEst()"/>
+          </div>
+          <div class="form-group">
+            <label>Color / Fabric Preference</label>
+            <input id="sewing-color" placeholder="e.g. Ivory, navy..."/>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group full" style="margin-top:12px;">
+        <label>Custom Project Notes</label>
+        <textarea id="sewing-notes" placeholder="Any details — name to embroider, colors, size, occasion..."></textarea>
+      </div>
+
+      <!-- Sewing estimate -->
+      <div class="sewing-est" id="sewing-est">
+        <div class="sewing-est-title">🎀 Project Estimate</div>
+        <div id="sewing-est-lines"></div>
+        <div class="sewing-est-total"><span>Estimated Total</span><span id="sewing-est-total">$0</span></div>
+        <p style="font-size:11px;color:var(--muted);margin-top:8px">*Final pricing confirmed before work begins. Custom projects may vary based on materials.</p>
+      </div>
+    </div>
+
+    <!-- PHOTO UPLOAD -->
+    <div class="card">
+      <div class="card-title">📸 Photos of Your Garment <span style="font-size:12px;color:var(--muted);font-weight:400">(optional but helpful!)</span></div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:12px;line-height:1.6;">Adding photos helps Anita understand what's needed before your appointment. You can add up to 4 photos.</p>
+      <div class="photo-upload-area" id="photo-upload-area" onclick="document.getElementById('photo-input').click()">
+        <div class="photo-upload-icon">📷</div>
+        <div class="photo-upload-label">Tap to add photos</div>
+        <div class="photo-upload-sub">JPG, PNG — up to 4 photos</div>
+        <input type="file" id="photo-input" accept="image/*" multiple style="display:none" onchange="handlePhotos(this)"/>
+      </div>
+      <div class="photo-preview-grid" id="photo-preview-grid"></div>
+    </div>
+
+    <!-- DROP-OFF METHOD -->
+    <div class="card">
+      <div class="card-title">📅 How Will You Drop Off?</div>
+
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;">
+        <div class="dropoff-opt" id="opt-appointment" onclick="setDropoff('appointment')">
+          <div class="dropoff-icon">📅</div>
+          <div class="dropoff-info">
+            <div class="dropoff-name">Schedule an Appointment</div>
+            <div class="dropoff-desc">Pick a date &amp; time to meet with Anita</div>
+          </div>
+          <div class="dropoff-check" id="chk-appointment"></div>
+        </div>
+        <div class="dropoff-opt" id="opt-porch" onclick="setDropoff('porch')">
+          <div class="dropoff-icon">🏡</div>
+          <div class="dropoff-info">
+            <div class="dropoff-name">Front Porch Drop-Off</div>
+            <div class="dropoff-desc">Leave your items — no appointment needed. Anita will text you when ready.</div>
+          </div>
+          <div class="dropoff-check" id="chk-porch"></div>
+        </div>
+      </div>
+
+      <div id="appt-fields" style="display:none;">
+        <div style="height:1px;background:var(--border);margin-bottom:14px;"></div>
+        <div class="form-grid">
+          <div class="form-group"><label>Preferred Date</label><input id="pref-date" type="date"/></div>
+          <div class="form-group">
+            <label>Preferred Time</label>
+            <select id="pref-time">
+              <option value="">-- Select time --</option>
+              <option>4:00 PM</option><option>4:30 PM</option><option>5:00 PM</option>
+              <option>5:30 PM</option><option>6:00 PM</option><option>6:30 PM</option>
+              <option>7:00 PM</option><option>Weekend Morning</option><option>Weekend Afternoon</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div id="porch-note" style="display:none;">
+        <div style="height:1px;background:var(--border);margin-bottom:14px;"></div>
+        <div style="background:var(--teal-light);border-radius:12px;border:1.5px solid var(--teal);padding:14px 16px;font-size:13px;color:var(--teal-dark);line-height:1.8;">
+          🏡 <strong>Front Porch Drop-Off Instructions:</strong><br/>
+          Drop off your items at <strong>7 Castlewoods Way, Petal, MS 39465</strong>.<br/>
+          Place them in a bag labeled with your <strong>name &amp; phone number</strong> and leave at the front door.
+          Text Anita at <strong>601-325-4514</strong> to let her know it's there.
+          She'll text you when your items are ready for pick-up!
+        </div>
+      </div>
+
+      <div style="height:1px;background:var(--border);margin:14px 0;"></div>
+      <div class="form-group">
+        <label>How did you hear about us?</label>
+        <select id="source">
+          <option>Facebook</option><option>Word of Mouth</option><option>Returning Client</option>
+          <option>Instagram</option><option>TikTok</option><option>Text / Referral</option><option>Other</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="err" id="err-msg">Please fill in all required fields marked with *</div>
+    <button class="btn btn-accent" id="submit-btn" onclick="submitRequest()">✉️ Submit Request</button>
+
+  </div>
+
+  <!-- SUCCESS -->
+  <div class="success" id="success-box">
+    <div class="success-icon">🎉</div>
+    <h2>Request Submitted!</h2>
+    <p>Thank you! Anita will review your request and reach out within 24 hours to confirm your appointment and provide your final estimate.</p>
+    <br/>
+    <!-- CONFIRMATION TEXT BUTTON -->
+    <div style="background:rgba(255,255,255,0.7);border-radius:12px;padding:16px;margin:16px 0;text-align:left;">
+      <div style="font-weight:700;color:var(--teal-dark);font-size:14px;margin-bottom:6px;">📱 Save your confirmation</div>
+      <p style="font-size:13px;color:#555;margin-bottom:12px;line-height:1.6;">Tap below to send yourself a text with your request details so you have them handy.</p>
+      <button onclick="sendConfirmationText()" style="width:100%;padding:13px;background:linear-gradient(135deg,var(--teal),var(--teal-dark));color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;font-family:'Lato',sans-serif;cursor:pointer;">
+        💬 Text Me My Confirmation
+      </button>
+    </div>
+    <p style="font-weight:700;font-size:13px;">📞 Questions? Call or text 601-325-4514</p>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script>
+  // Safe supabase init
+  let supabase = null;
+  try {
+    if (typeof SUPABASE_URL !== 'undefined' && SUPABASE_URL && !SUPABASE_URL.includes('YOUR_')) {
+      supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    }
+  } catch(e) { console.warn('Supabase not configured yet:', e); }
+
+  // ── ALTERATION PRICING ──
+  const SVC_EST = {hem:15,takein:25,zipper:25,bustle:50,bodice:60,waistband:30,repair:20,custom:0};
+  const GMU = {pants:1,dress:1.1,wedding:1.5,formal:1.3,jacket:1.2,shirt:1,other:1};
+
+  // ── CUSTOM SEWING PRICING ──
+  const SEWING_ITEMS = {
+    'wreath-plain': { name:'Door Wreath Sash (No Embroidery)',   price:20,  perLetter:false },
+    'wreath-one':   { name:'Door Wreath Sash (1-Side Embroidery)', price:28, perLetter:false },
+    'wreath-two':   { name:'Door Wreath Sash (2-Side Embroidery)', price:35, perLetter:false },
+    'banner':       { name:'Baby Banner Name',                     price:7,  perLetter:true  },
+    'swaddle':      { name:'Baby Swaddle Sash',                    price:30, perLetter:false },
+    'other':        { name:'Other Custom Project',                 price:0,  perLetter:false },
+  };
+
+  let serviceType = 'alterations';
+  let selectedSewing = null;
+  let letterCount = 1;
+
+  // ── TYPE TOGGLE ──
+  function switchType(type) {
+    serviceType = type;
+    ['alterations','custom','both'].forEach(t => {
+      document.getElementById('btn-'+t).classList.toggle('active', t === type);
+    });
+    const showAlt  = type === 'alterations' || type === 'both';
+    const showSew  = type === 'custom'      || type === 'both';
+    document.getElementById('alteration-card').classList.toggle('hidden', !showAlt);
+    document.getElementById('custom-card').classList.toggle('hidden', !showSew);
+    updateSewingEst();
+  }
+
+  // ── ALTERATION ICON SELECTION ──
+  let selGarment = null, selGarmentLabel = '', selService = null, selServiceLabel = '', selServiceEst = 0;
+
+  function selectGarment(val, el) {
+    selGarment = val;
+    selGarmentLabel = el.querySelector('.icon-card-name').textContent;
+    document.getElementById('garment').value = val;
+    document.querySelectorAll('.icon-card').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+    document.getElementById('service-section').style.display = 'block';
+    // Reset service selection when garment changes
+    selService = null; selServiceLabel = ''; selServiceEst = 0;
+    document.getElementById('service').value = '';
+    document.querySelectorAll('.svc-icon-item').forEach(c => c.classList.remove('selected'));
+    document.getElementById('qty-urgency-section').style.display = 'none';
+    document.getElementById('est-box').style.display = 'none';
+    el.scrollIntoView({behavior:'smooth', block:'nearest'});
+  }
+
+  function selectService(val, label, est, el) {
+    selService = val; selServiceLabel = label; selServiceEst = est;
+    document.getElementById('service').value = val;
+    document.querySelectorAll('.svc-icon-item').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+    document.getElementById('qty-urgency-section').style.display = 'block';
+    // Reset qty to 1 on new service selection
+    document.getElementById('qty').value = 1;
+    document.getElementById('qty-display').textContent = 1;
+    updateAltEst();
+    el.scrollIntoView({behavior:'smooth', block:'nearest'});
+  }
+
+  function changeAltQty(delta) {
+    const input = document.getElementById('qty');
+    const current = parseInt(input.value) || 1;
+    const next = Math.max(1, Math.min(20, current + delta));
+    input.value = next;
+    document.getElementById('qty-display').textContent = next;
+    updateAltEst();
+  }
+
+  function updateAltEst() {
+    const qty = parseInt(document.getElementById('qty')?.value) || 1;
+    const box = document.getElementById('est-box');
+    if (!selGarment || !selService) { box.style.display = 'none'; return; }
+    const base = selServiceEst;
+    const mult = GMU[selGarment] || 1;
+    const unitPrice = base * mult;
+    const est = unitPrice * qty;
+
+    // Update counter sublabel
+    const sublabel = document.getElementById('qty-price-each');
+    if (sublabel && base > 0) sublabel.textContent = `$${unitPrice.toFixed(0)} each`;
+
+    // Show/update live total row
+    const totalRow = document.getElementById('qty-total-row');
+    const totalFormula = document.getElementById('qty-total-formula');
+    const totalAmt = document.getElementById('qty-total-amt');
+    if (base > 0 && qty > 1) {
+      totalRow.style.display = 'flex';
+      totalFormula.textContent = `$${unitPrice.toFixed(0)} × ${qty} items`;
+      totalAmt.textContent = `$${est.toFixed(0)}`;
+    } else {
+      totalRow.style.display = 'none';
+    }
+
+    // Estimate box
+    let html = `<div class="est-line"><span>${selGarmentLabel} — ${selServiceLabel}</span><span>$${base > 0 ? unitPrice.toFixed(0) : 'TBD'} each</span></div>`;
+    if (qty > 1) html += `<div class="est-line"><span>${qty} items × $${unitPrice.toFixed(0)}</span><span style="font-weight:700;color:var(--teal)">= $${est.toFixed(0)}</span></div>`;
+    document.getElementById('est-lines').innerHTML = html;
+    document.getElementById('est-total-amt').textContent = est > 0 ? `Starting at $${est.toFixed(0)}` : 'Quote upon inspection';
+    box.style.display = 'block';
+  }
+
+  // ── SEWING TOGGLE ──
+  function toggleSewing(id) {
+    if (selectedSewing === id) {
+      // Deselect
+      selectedSewing = null;
+      document.getElementById('sew-'+id).classList.remove('selected');
+      document.getElementById('sew-icon-'+id).style.filter = '';
+      document.getElementById('banner-letters').classList.remove('show');
+      document.getElementById('sewing-qty-row').style.display = 'none';
+      document.getElementById('sewing-est').style.display = 'none';
+    } else {
+      // Deselect previous
+      if (selectedSewing) {
+        document.getElementById('sew-'+selectedSewing).classList.remove('selected');
+        document.getElementById('sew-icon-'+selectedSewing).style.filter = '';
+      }
+      selectedSewing = id;
+      document.getElementById('sew-'+id).classList.add('selected');
+
+      // Show letter count or qty
+      const isBanner = SEWING_ITEMS[id]?.perLetter;
+      document.getElementById('banner-letters').classList.toggle('show', isBanner);
+      document.getElementById('sewing-qty-row').style.display = isBanner ? 'none' : 'block';
+      updateSewingEst();
+    }
+  }
+
+  function changeLetters(delta, e) {
+    e.stopPropagation();
+    letterCount = Math.max(1, Math.min(30, letterCount + delta));
+    document.getElementById('letter-count').textContent = letterCount;
+    document.getElementById('banner-est-text').textContent = `$${(letterCount * 7).toFixed(0)} total`;
+    updateSewingEst();
+  }
+
+  function updateSewingEst() {
+    const estEl = document.getElementById('sewing-est');
+    if (!selectedSewing) { estEl.style.display = 'none'; return; }
+    const item = SEWING_ITEMS[selectedSewing];
+    if (!item || item.price === 0) { estEl.style.display = 'none'; return; }
+
+    const qty = item.perLetter ? letterCount : (parseInt(document.getElementById('sewing-qty')?.value) || 1);
+    const total = item.price * qty;
+    const unitLabel = item.perLetter ? `${qty} letters × $${item.price}` : `${qty > 1 ? qty + ' × $' + item.price : '$' + item.price + ' each'}`;
+
+    document.getElementById('sewing-est-lines').innerHTML =
+      `<div class="sewing-est-line"><span>${item.name}</span><span></span></div>
+       <div class="sewing-est-line"><span style="color:var(--muted)">${unitLabel}</span><span style="font-weight:700">$${total.toFixed(0)}</span></div>`;
+    document.getElementById('sewing-est-total').textContent = `$${total.toFixed(0)}`;
+    estEl.style.display = 'block';
+  }
+
+  // ── SUBMIT ──
+  async function submitRequest() {
+    const fname   = document.getElementById('fname').value.trim();
+    const lname   = document.getElementById('lname').value.trim();
+    const phone   = document.getElementById('phone').value.trim();
+    const errEl   = document.getElementById('err-msg');
+    const needAlt = serviceType === 'alterations' || serviceType === 'both';
+    const needSew = serviceType === 'custom' || serviceType === 'both';
+    const garment = document.getElementById('garment').value;
+    const service = document.getElementById('service').value;
+
+    if (!fname || !lname || !phone) { errEl.style.display = 'block'; return; }
+    if (needAlt && (!selGarment || !selService)) { errEl.textContent = 'Please select a garment type and service.'; errEl.style.display = 'block'; return; }
+    if (needSew && !selectedSewing) { errEl.textContent = 'Please select a custom sewing project.'; errEl.style.display = 'block'; return; }
+
+    errEl.style.display = 'none';
+    const btn = document.getElementById('submit-btn');
+    btn.disabled = true; btn.textContent = 'Submitting...';
+
+    // Build notes combining both sections
+    const sewingItem = selectedSewing ? SEWING_ITEMS[selectedSewing] : null;
+    const sewingNote = sewingItem ? `CUSTOM PROJECT: ${sewingItem.name}${sewingItem.perLetter ? ' (' + letterCount + ' letters)' : ''} | Color: ${document.getElementById('sewing-color')?.value || 'Not specified'} | Notes: ${document.getElementById('sewing-notes').value}` : '';
+    const altNote = document.getElementById('alt-notes')?.value || '';
+    const dropoffNote = dropoffMethod === 'porch' ? 'DROP-OFF METHOD: Front Porch Drop-Off (no appointment)' : dropoffMethod === 'appointment' ? 'DROP-OFF METHOD: Scheduled Appointment' : '';
+    const combinedNotes = [altNote, sewingNote, dropoffNote].filter(Boolean).join('\n\n');
+
+    if (!supabase) {
+      btn.disabled = false; btn.textContent = '✉️ Submit Request';
+      alert('Database not configured yet. Please check your config.js file.');
+      return;
+    }
+    const { error } = await supabase.from('requests').insert([{
+      first_name:    fname,
+      last_name:     lname,
+      phone,
+      email:         document.getElementById('email').value,
+      garment:       selGarment || document.getElementById('garment').value || 'Custom Sewing',
+      service:       selServiceLabel || (sewingItem ? sewingItem.name : 'Custom Project'),
+      qty:           sewingItem?.perLetter ? letterCount : (parseInt(document.getElementById('qty')?.value) || 1),
+      urgency:       document.getElementById('urgency')?.value || 'standard',
+      notes:         combinedNotes,
+      preferred_date: document.getElementById('pref-date').value || null,
+      preferred_time: document.getElementById('pref-time').value || null,
+      source:        document.getElementById('source').value,
+    }]);
+
+    if (error) {
+      btn.disabled = false;
+      btn.textContent = '✉️ Submit Request';
+      alert('Something went wrong. Please call 601-325-4514 directly.');
+      console.error(error);
+    } else {
+      // Store for confirmation text
+      lastSubmission = {
+        fname, phone,
+        service: selServiceLabel || (sewingItem ? sewingItem.name : ''),
+        garment: selGarmentLabel || selGarment || '',
+        qty: sewingItem?.perLetter ? letterCount : (parseInt(document.getElementById('qty')?.value) || 1),
+        dropoff: dropoffMethod,
+        date: document.getElementById('pref-date')?.value || '',
+        time: document.getElementById('pref-time')?.value || '',
+      };
+      document.getElementById('form-wrap').style.display = 'none';
+      document.getElementById('success-box').classList.add('show');
+    }
+  }
+
+  // ── RETURNING CLIENT ──
+  let isReturning = false;
+  function setClientType(type) {
+    isReturning = type === 'returning';
+    document.getElementById('ctype-new').classList.toggle('active', !isReturning);
+    document.getElementById('ctype-returning').classList.toggle('active', isReturning);
+    document.getElementById('returning-msg').style.display = isReturning ? 'block' : 'none';
+  }
+
+  // ── PHOTO UPLOAD ──
+  let uploadedPhotos = [];
+  function handlePhotos(input) {
+    const files = Array.from(input.files).slice(0, 4 - uploadedPhotos.length);
+    const area = document.getElementById('photo-upload-area');
+    const grid = document.getElementById('photo-preview-grid');
+    files.forEach(file => {
+      if (uploadedPhotos.length >= 4) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        uploadedPhotos.push({name: file.name, data: e.target.result});
+        renderPhotoGrid();
+        area.classList.add('has-photo');
+        area.querySelector('.photo-upload-label').textContent =
+          uploadedPhotos.length >= 4 ? 'Maximum 4 photos added' : `${uploadedPhotos.length} photo${uploadedPhotos.length>1?'s':''} added — tap to add more`;
+      };
+      reader.readAsDataURL(file);
+    });
+    input.value = '';
+  }
+
+  function renderPhotoGrid() {
+    const grid = document.getElementById('photo-preview-grid');
+    grid.innerHTML = uploadedPhotos.map((p, i) => `
+      <div class="photo-preview-item">
+        <img src="${p.data}" alt="Photo ${i+1}"/>
+        <button class="photo-remove-btn" onclick="removePhoto(${i})">✕</button>
+      </div>
+    `).join('');
+  }
+
+  function removePhoto(idx) {
+    uploadedPhotos.splice(idx, 1);
+    renderPhotoGrid();
+    const area = document.getElementById('photo-upload-area');
+    if (uploadedPhotos.length === 0) {
+      area.classList.remove('has-photo');
+      area.querySelector('.photo-upload-label').textContent = 'Tap to add photos';
+    } else {
+      area.querySelector('.photo-upload-label').textContent =
+        `${uploadedPhotos.length} photo${uploadedPhotos.length>1?'s':''} added — tap to add more`;
+    }
+  }
+
+  // ── CONFIRMATION TEXT ──
+  let lastSubmission = {};
+  function sendConfirmationText() {
+    const s = lastSubmission;
+    const lines = [
+      `✅ Taylor Alterations & More LLC`,
+      `━━━━━━━━━━━━━━━━━━━━━━`,
+      `Hi ${s.fname}! Your request has been submitted.`,
+      ``,
+      `📋 Request Summary:`,
+      s.service ? `Service: ${s.service}` : '',
+      s.garment ? `Garment: ${s.garment}` : '',
+      s.qty > 1 ? `Quantity: ${s.qty}` : '',
+      s.dropoff === 'porch' ? `Drop-off: Front Porch — 7 Castlewoods Way, Petal MS 39465` : `Drop-off: Scheduled Appointment`,
+      s.date ? `Preferred: ${s.date} ${s.time ? 'at ' + s.time : ''}` : '',
+      ``,
+      `Anita will reach out within 24 hours to confirm.`,
+      `📞 Questions? Call or text 601-325-4514`,
+    ].filter(Boolean).join('
+');
+    window.open('sms:' + s.phone + '?body=' + encodeURIComponent(lines), '_blank');
+  }
+
+  // ── DROP-OFF METHOD ──
+  let dropoffMethod = null;
+
+  function setDropoff(method) {
+    dropoffMethod = method;
+    ['appointment','porch'].forEach(m => {
+      document.getElementById('opt-'+m).classList.toggle('selected', m === method);
+    });
+    document.getElementById('appt-fields').style.display  = method === 'appointment' ? 'block' : 'none';
+    document.getElementById('porch-note').style.display   = method === 'porch'        ? 'block' : 'none';
+  }
+
+</script>
+</body>
+</html>
