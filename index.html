@@ -374,11 +374,11 @@
             </div>
             <div class="svc-icon-price">$20+</div>
           </div>
-          <div class="svc-icon-item" data-val="custom" data-est="0" onclick="selectService('custom','Custom / Not Sure',0,this)">
+          <div class="svc-icon-item" data-val="custom" data-est="0" onclick="selectService('custom','I Don’t See My Alteration',0,this)">
             <div class="svc-icon-emoji">💡</div>
             <div class="svc-icon-info">
-              <div class="svc-icon-name">Custom / Not Sure</div>
-              <div class="svc-icon-desc">Describe in notes below</div>
+              <div class="svc-icon-name">I Don’t See My Alteration</div>
+              <div class="svc-icon-desc">Describe what you need in the notes below and upload photos if possible</div>
             </div>
             <div class="svc-icon-price">TBD</div>
           </div>
@@ -760,7 +760,12 @@
 
     document.querySelectorAll('.svc-icon-item').forEach(item => {
       const allowed = item.getAttribute('data-garments');
-      item.style.display = !allowed || allowed.split(',').includes(val) ? 'flex' : 'none';
+      const serviceId = item.getAttribute('data-val');
+      if (val === 'other') {
+        item.style.display = serviceId === 'custom' ? 'flex' : 'none';
+      } else {
+        item.style.display = !allowed || allowed.split(',').includes(val) ? 'flex' : 'none';
+      }
     });
     el.scrollIntoView({behavior:'smooth', block:'nearest'});
   }
