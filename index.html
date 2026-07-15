@@ -512,7 +512,7 @@
         <input id="sewing-banner-color" placeholder="e.g. Ivory, navy..."/>
       </div>
 
-      <button type="button" class="add-service-btn" id="add-sewing-btn" style="display:none;margin-top:12px;" onclick="addSewingToQuote()">＋ Add This Custom Item to Quote</button>
+      <button type="button" class="add-service-btn" id="add-sewing-btn" style="display:block;margin-top:12px;" onclick="addSewingToQuote()" disabled>＋ Select a Custom Item Above</button>
 
       <div class="quote-services" id="sewing-quote-services">
         <div class="alt-section-label" style="margin-top:4px;">Custom Items Added to Quote</div>
@@ -868,7 +868,9 @@
     document.getElementById('banner-letters').classList.toggle('show', isBanner);
     document.getElementById('sewing-qty-row').style.display = isBanner ? 'none' : 'block';
     document.getElementById('sewing-banner-color-row').style.display = isBanner ? 'flex' : 'none';
-    document.getElementById('add-sewing-btn').style.display = 'block';
+    const addBtn = document.getElementById('add-sewing-btn');
+    addBtn.disabled = false;
+    addBtn.textContent = '＋ Add This Custom Item to Quote';
     updateSewingEst();
   }
 
@@ -923,7 +925,9 @@
     document.getElementById('banner-letters').classList.remove('show');
     document.getElementById('sewing-qty-row').style.display = 'none';
     document.getElementById('sewing-banner-color-row').style.display = 'none';
-    document.getElementById('add-sewing-btn').style.display = 'none';
+    const addBtn = document.getElementById('add-sewing-btn');
+    addBtn.disabled = true;
+    addBtn.textContent = '＋ Select a Custom Item Above';
     document.getElementById('sewing-qty').value = 1;
   }
 
