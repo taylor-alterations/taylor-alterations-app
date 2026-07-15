@@ -533,6 +533,15 @@
       </div>
     </div>
 
+    <!-- COMBINED QUOTE -->
+    <div class="card" id="combined-quote-card" style="display:none;">
+      <div class="card-title">🧾 Your Combined Quote</div>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.5;">Items added under Alterations and Custom Sewing will stay together in this quote while you switch between sections.</p>
+      <div id="combined-quote-list"></div>
+      <div class="est-total" style="margin-top:12px;"><span>Combined Starting Estimate</span><span id="combined-quote-total">$0</span></div>
+      <p id="combined-quote-note" style="font-size:11px;color:var(--muted);margin-top:8px">*Final pricing is confirmed after garment or project review.</p>
+    </div>
+
     <!-- PHOTO UPLOAD -->
     <div class="card">
       <div class="card-title">📸 Photos of Your Garment <span style="font-size:12px;color:var(--muted);font-weight:400">(optional but helpful!)</span></div>
@@ -707,6 +716,7 @@
     document.getElementById('custom-card').classList.toggle('hidden', !showSew);
     document.getElementById('embroidery-card').classList.toggle('hidden', !showEmb);
     if(showSew) updateSewingEst();
+    renderCombinedQuote();
   }
 
   // ── ALTERATION ICON SELECTION ──
@@ -831,12 +841,13 @@
         <button type="button" class="quote-remove-btn" onclick="removeServiceFromQuote('${item.key}')" aria-label="Remove ${item.garmentLabel} ${item.label}">×</button>
       </div>`;
     }).join('');
+    renderCombinedQuote();
   }
 
   function updateAltEst() {
     const box = document.getElementById('est-box');
     const services = Object.values(selectedServices);
-    if (services.length === 0) { box.style.display = 'none'; return; }
+    if (services.length === 0) { box.style.display = 'none'; renderCombinedQuote(); return; }
 
     let subtotal = 0;
     let hasTbd = false;
@@ -856,6 +867,7 @@
     document.getElementById('est-lines').innerHTML = html;
     document.getElementById('est-total-amt').textContent = total > 0 ? `Starting at $${total.toFixed(0)}${hasTbd ? ' + TBD item' : ''}` : 'Quote upon inspection';
     box.style.display = 'block';
+    renderCombinedQuote();
   }
 
   // ── CUSTOM SEWING MULTI-ITEM QUOTE ──
@@ -962,6 +974,7 @@
 
     if (items.length === 0 && !selectedSewing) {
       estEl.style.display = 'none';
+      renderCombinedQuote();
       return;
     }
 
@@ -982,6 +995,72 @@
       ? `$${pricedTotal.toFixed(0)}${hasTbd ? ' + TBD item' : ''}`
       : (hasTbd ? 'Quote needed' : '$0');
     estEl.style.display = 'block';
+    renderCombinedQuote();
+  }
+
+  // ── COMBINED ALTERATIONS + CUSTOM SEWING QUOTE ──
+  function renderCombinedQuote() {
+    const card = document.getElementById('combined-quote-card');
+    const list = document.getElementById('combined-quote-list');
+    const totalEl = document.getElementById('combined-quote-total');
+    if (!card || !list || !totalEl) return;
+
+    const alterations = Object.values(selectedServices);
+    const sewing = Object.values(selectedSewingItems);
+    const hasItems = alterations.length > 0 || sewing.length > 0;
+    card.style.display = hasItems ? 'block' : 'none';
+    if (!hasItems) {
+      list.innerHTML = '';
+      totalEl.textContent = '$0';
+      return;
+    }
+
+    let alterationSubtotal = 0;
+    let sewingSubtotal = 0;
+    let hasTbd = false;
+    const rows = [];
+
+    alterations.forEach(item => {
+      const unit = item.base * item.multiplier;
+      const lineTotal = unit * item.qty;
+      if (item.base > 0) alterationSubtotal += lineTotal; else hasTbd = true;
+      rows.push(`<div class="quote-service-row">
+        <div class="quote-service-info">
+          <div class="quote-service-name">Alteration — ${item.garmentLabel}: ${item.label}</div>
+          <div class="quote-service-detail">Quantity: ${item.qty}${item.base > 0 ? ` × $${unit.toFixed(0)} each` : ' · Price TBD'}</div>
+        </div>
+        <div class="quote-service-price">${item.base > 0 ? '$' + lineTotal.toFixed(0) : 'TBD'}</div>
+        <button type="button" class="quote-remove-btn" onclick="removeServiceFromQuote('${item.key}')" aria-label="Remove ${item.garmentLabel} ${item.label}">×</button>
+      </div>`);
+    });
+
+    sewing.forEach(item => {
+      const lineTotal = item.price * item.qty;
+      if (item.price > 0) sewingSubtotal += lineTotal; else hasTbd = true;
+      const qtyText = item.perLetter ? `${item.qty} letters` : `Quantity: ${item.qty}`;
+      const colorText = item.color ? ` · ${item.color}` : '';
+      rows.push(`<div class="quote-service-row">
+        <div class="quote-service-info">
+          <div class="quote-service-name">Custom Sewing — ${item.name}</div>
+          <div class="quote-service-detail">${qtyText}${colorText}</div>
+        </div>
+        <div class="quote-service-price">${item.price > 0 ? '$' + lineTotal.toFixed(0) : 'TBD'}</div>
+        <button type="button" class="quote-remove-btn" onclick="removeSewingFromQuote('${item.id}')" aria-label="Remove ${item.name}">×</button>
+      </div>`);
+    });
+
+    const urgency = document.getElementById('urgency')?.value || 'standard';
+    const rushRate = urgency === 'rush' ? 0.25 : urgency === 'super' ? 0.50 : 0;
+    const rushAmount = alterationSubtotal * rushRate;
+    if (rushAmount > 0) {
+      rows.push(`<div class="est-line" style="padding:6px 2px;"><span>${urgency === 'super' ? 'Super Rush' : 'Rush'} charge on alterations (${rushRate * 100}%)</span><span>$${rushAmount.toFixed(0)}</span></div>`);
+    }
+
+    list.innerHTML = rows.join('');
+    const combinedTotal = alterationSubtotal + rushAmount + sewingSubtotal;
+    totalEl.textContent = combinedTotal > 0
+      ? `$${combinedTotal.toFixed(0)}${hasTbd ? ' + TBD item' : ''}`
+      : (hasTbd ? 'Quote needed' : '$0');
   }
 
   // ── SUBMIT ──
@@ -990,16 +1069,17 @@
     const lname   = document.getElementById('lname').value.trim();
     const phone   = document.getElementById('phone').value.trim();
     const errEl   = document.getElementById('err-msg');
-    const needAlt = serviceType === 'alterations' || serviceType === 'both';
-    const needSew = serviceType === 'custom' || serviceType === 'both';
     const garment = document.getElementById('garment').value;
     const service = document.getElementById('service').value;
     const alterationServices = Object.values(selectedServices);
     const sewingItems = Object.values(selectedSewingItems);
 
     if (!fname || !lname || !phone) { errEl.style.display = 'block'; return; }
-    if (needAlt && alterationServices.length === 0) { errEl.textContent = 'Please select a garment type and add at least one service to the quote.'; errEl.style.display = 'block'; return; }
-    if (needSew && sewingItems.length === 0) { errEl.textContent = 'Please add at least one custom sewing project to the quote.'; errEl.style.display = 'block'; return; }
+    if (alterationServices.length === 0 && sewingItems.length === 0 && serviceType !== 'both') {
+      errEl.textContent = 'Please add at least one alteration service or custom sewing project to the quote.';
+      errEl.style.display = 'block';
+      return;
+    }
     const needEmb = serviceType === 'both';
     if (needEmb && !document.getElementById('emb-item').value.trim()) { errEl.textContent = 'Please describe what you would like embroidered.'; errEl.style.display = 'block'; return; }
 
