@@ -176,6 +176,23 @@
     .photo-preview-item{position:relative;border-radius:10px;overflow:hidden;aspect-ratio:1;}
     .photo-preview-item img{width:100%;height:100%;object-fit:cover;}
     .photo-remove-btn{position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.6);color:#fff;border:none;border-radius:50%;width:22px;height:22px;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;}
+
+
+    /* QUOTE COUNTS + STICKY SUMMARY */
+    .type-label-row{display:flex;align-items:center;justify-content:center;gap:6px;}
+    .type-count{display:none;min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:var(--accent);color:#fff;font-size:11px;font-weight:900;line-height:20px;text-align:center;}
+    .type-btn.active .type-count{background:#fff;color:var(--teal-dark);}
+    .sticky-quote-bar{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);width:min(528px,calc(100% - 24px));z-index:1000;background:var(--teal-dark);color:#fff;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.25);display:none;align-items:center;gap:12px;padding:11px 12px 11px 16px;}
+    .sticky-quote-bar.show{display:flex;}
+    .sticky-quote-info{flex:1;min-width:0;}
+    .sticky-quote-count{font-size:12px;font-weight:700;opacity:.9;}
+    .sticky-quote-total{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;white-space:nowrap;}
+    .sticky-quote-btn{border:1.5px solid rgba(255,255,255,.7);background:#fff;color:var(--teal-dark);border-radius:10px;padding:9px 12px;font:700 12px 'Lato',sans-serif;cursor:pointer;white-space:nowrap;}
+    .quote-group{margin-top:12px;}
+    .quote-group:first-child{margin-top:0;}
+    .quote-group-title{font-size:11px;font-weight:900;letter-spacing:1px;text-transform:uppercase;color:var(--teal-dark);background:var(--teal-light);border-radius:8px;padding:7px 10px;margin-bottom:6px;}
+    .quote-garment-title{font-size:12px;font-weight:900;color:var(--text);margin:10px 2px 4px;}
+    body{padding-bottom:92px;}
   </style>
 </head>
 <body>
@@ -192,10 +209,10 @@
     <!-- SERVICE TYPE TOGGLE -->
     <div class="type-toggle">
       <button class="type-btn active" id="btn-alterations" onclick="switchType('alterations')">
-        <span>✂️</span>Alterations<small>Garment Work</small>
+        <span>✂️</span><div class="type-label-row">Alterations <span class="type-count" id="alterations-count">0</span></div><small>Garment Work</small>
       </button>
       <button class="type-btn" id="btn-custom" onclick="switchType('custom')">
-        <span>🎀</span>Custom Sewing<small>Décor & More</small>
+        <span>🎀</span><div class="type-label-row">Custom Sewing <span class="type-count" id="custom-count">0</span></div><small>Décor & More</small>
       </button>
       <button class="type-btn" id="btn-both" onclick="switchType('both')">
         <span>🧵</span>Embroidery<small>Pricing TBD</small>
@@ -1003,64 +1020,109 @@
     const card = document.getElementById('combined-quote-card');
     const list = document.getElementById('combined-quote-list');
     const totalEl = document.getElementById('combined-quote-total');
+    const altCountEl = document.getElementById('alterations-count');
+    const customCountEl = document.getElementById('custom-count');
+    const stickyBar = document.getElementById('sticky-quote-bar');
+    const stickyCount = document.getElementById('sticky-quote-count');
+    const stickyTotal = document.getElementById('sticky-quote-total');
     if (!card || !list || !totalEl) return;
 
     const alterations = Object.values(selectedServices);
     const sewing = Object.values(selectedSewingItems);
-    const hasItems = alterations.length > 0 || sewing.length > 0;
+    const alterationQty = alterations.reduce((sum, item) => sum + Number(item.qty || 0), 0);
+    const sewingQty = sewing.reduce((sum, item) => sum + Number(item.qty || 0), 0);
+    const totalQty = alterationQty + sewingQty;
+    const hasItems = totalQty > 0;
+
+    if (altCountEl) {
+      altCountEl.textContent = alterationQty;
+      altCountEl.style.display = alterationQty ? 'inline-block' : 'none';
+    }
+    if (customCountEl) {
+      customCountEl.textContent = sewingQty;
+      customCountEl.style.display = sewingQty ? 'inline-block' : 'none';
+    }
+
     card.style.display = hasItems ? 'block' : 'none';
     if (!hasItems) {
       list.innerHTML = '';
       totalEl.textContent = '$0';
+      if (stickyBar) stickyBar.classList.remove('show');
       return;
     }
 
     let alterationSubtotal = 0;
     let sewingSubtotal = 0;
     let hasTbd = false;
-    const rows = [];
+    const sections = [];
 
-    alterations.forEach(item => {
-      const unit = item.base * item.multiplier;
-      const lineTotal = unit * item.qty;
-      if (item.base > 0) alterationSubtotal += lineTotal; else hasTbd = true;
-      rows.push(`<div class="quote-service-row">
-        <div class="quote-service-info">
-          <div class="quote-service-name">Alteration — ${item.garmentLabel}: ${item.label}</div>
-          <div class="quote-service-detail">Quantity: ${item.qty}${item.base > 0 ? ` × $${unit.toFixed(0)} each` : ' · Price TBD'}</div>
-        </div>
-        <div class="quote-service-price">${item.base > 0 ? '$' + lineTotal.toFixed(0) : 'TBD'}</div>
-        <button type="button" class="quote-remove-btn" onclick="removeServiceFromQuote('${item.key}')" aria-label="Remove ${item.garmentLabel} ${item.label}">×</button>
-      </div>`);
-    });
+    if (alterations.length) {
+      const garmentGroups = {};
+      alterations.forEach(item => {
+        const garment = item.garmentLabel || 'Garment';
+        (garmentGroups[garment] ||= []).push(item);
+      });
+      const garmentHtml = Object.entries(garmentGroups).map(([garment, items]) => {
+        const rows = items.map(item => {
+          const unit = item.base * item.multiplier;
+          const lineTotal = unit * item.qty;
+          if (item.base > 0) alterationSubtotal += lineTotal; else hasTbd = true;
+          return `<div class="quote-service-row">
+            <div class="quote-service-info">
+              <div class="quote-service-name">${item.label}</div>
+              <div class="quote-service-detail">Quantity: ${item.qty}${item.base > 0 ? ` × $${unit.toFixed(0)} each` : ' · Price TBD'}</div>
+            </div>
+            <div class="quote-service-price">${item.base > 0 ? '$' + lineTotal.toFixed(0) : 'TBD'}</div>
+            <button type="button" class="quote-remove-btn" onclick="removeServiceFromQuote('${item.key}')" aria-label="Remove ${garment} ${item.label}">×</button>
+          </div>`;
+        }).join('');
+        return `<div class="quote-garment-title">${garment}</div>${rows}`;
+      }).join('');
+      sections.push(`<div class="quote-group"><div class="quote-group-title">✂️ Alterations</div>${garmentHtml}</div>`);
+    }
 
-    sewing.forEach(item => {
-      const lineTotal = item.price * item.qty;
-      if (item.price > 0) sewingSubtotal += lineTotal; else hasTbd = true;
-      const qtyText = item.perLetter ? `${item.qty} letters` : `Quantity: ${item.qty}`;
-      const colorText = item.color ? ` · ${item.color}` : '';
-      rows.push(`<div class="quote-service-row">
-        <div class="quote-service-info">
-          <div class="quote-service-name">Custom Sewing — ${item.name}</div>
-          <div class="quote-service-detail">${qtyText}${colorText}</div>
-        </div>
-        <div class="quote-service-price">${item.price > 0 ? '$' + lineTotal.toFixed(0) : 'TBD'}</div>
-        <button type="button" class="quote-remove-btn" onclick="removeSewingFromQuote('${item.id}')" aria-label="Remove ${item.name}">×</button>
-      </div>`);
-    });
+    if (sewing.length) {
+      const rows = sewing.map(item => {
+        const lineTotal = item.price * item.qty;
+        if (item.price > 0) sewingSubtotal += lineTotal; else hasTbd = true;
+        const qtyText = item.perLetter ? `${item.qty} letters` : `Quantity: ${item.qty}`;
+        const colorText = item.color ? ` · ${item.color}` : '';
+        return `<div class="quote-service-row">
+          <div class="quote-service-info">
+            <div class="quote-service-name">${item.name}</div>
+            <div class="quote-service-detail">${qtyText}${colorText}</div>
+          </div>
+          <div class="quote-service-price">${item.price > 0 ? '$' + lineTotal.toFixed(0) : 'TBD'}</div>
+          <button type="button" class="quote-remove-btn" onclick="removeSewingFromQuote('${item.id}')" aria-label="Remove ${item.name}">×</button>
+        </div>`;
+      }).join('');
+      sections.push(`<div class="quote-group"><div class="quote-group-title">🎀 Custom Sewing</div>${rows}</div>`);
+    }
 
     const urgency = document.getElementById('urgency')?.value || 'standard';
     const rushRate = urgency === 'rush' ? 0.25 : urgency === 'super' ? 0.50 : 0;
     const rushAmount = alterationSubtotal * rushRate;
     if (rushAmount > 0) {
-      rows.push(`<div class="est-line" style="padding:6px 2px;"><span>${urgency === 'super' ? 'Super Rush' : 'Rush'} charge on alterations (${rushRate * 100}%)</span><span>$${rushAmount.toFixed(0)}</span></div>`);
+      sections.push(`<div class="est-line" style="padding:9px 2px;"><span>${urgency === 'super' ? 'Super Rush' : 'Rush'} charge on alterations (${rushRate * 100}%)</span><span>$${rushAmount.toFixed(0)}</span></div>`);
     }
 
-    list.innerHTML = rows.join('');
+    list.innerHTML = sections.join('');
     const combinedTotal = alterationSubtotal + rushAmount + sewingSubtotal;
-    totalEl.textContent = combinedTotal > 0
+    const totalText = combinedTotal > 0
       ? `$${combinedTotal.toFixed(0)}${hasTbd ? ' + TBD item' : ''}`
       : (hasTbd ? 'Quote needed' : '$0');
+    totalEl.textContent = totalText;
+
+    if (stickyBar && stickyCount && stickyTotal) {
+      stickyCount.textContent = `${totalQty} ${totalQty === 1 ? 'item' : 'items'} in quote`;
+      stickyTotal.textContent = totalText;
+      stickyBar.classList.add('show');
+    }
+  }
+
+  function viewCombinedQuote() {
+    const card = document.getElementById('combined-quote-card');
+    if (card) card.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   // ── SUBMIT ──
@@ -1228,5 +1290,13 @@ Project Notes: ${document.getElementById('sewing-notes').value || 'None'}` : '';
   }
 
 </script>
+
+<div class="sticky-quote-bar" id="sticky-quote-bar">
+  <div class="sticky-quote-info">
+    <div class="sticky-quote-count" id="sticky-quote-count">0 items in quote</div>
+    <div class="sticky-quote-total" id="sticky-quote-total">$0</div>
+  </div>
+  <button type="button" class="sticky-quote-btn" onclick="viewCombinedQuote()">View Quote</button>
+</div>
 </body>
 </html>
