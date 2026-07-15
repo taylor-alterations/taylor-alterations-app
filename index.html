@@ -78,6 +78,19 @@
     .svc-icon-price{font-weight:700;color:var(--accent);font-size:14px;flex-shrink:0;}
     .svc-icon-item.selected .svc-icon-price{color:var(--teal);}
 
+
+    /* MULTI-SERVICE QUOTE */
+    .add-service-btn{margin-top:10px;padding:12px;border-radius:10px;border:none;background:var(--teal);color:#fff;font-family:'Lato',sans-serif;font-size:14px;font-weight:700;cursor:pointer;width:100%;}
+    .add-service-btn:hover{background:var(--teal-dark);}
+    .quote-services{margin-top:14px;display:none;}
+    .quote-services.show{display:block;}
+    .quote-service-row{display:flex;align-items:center;gap:10px;padding:11px 12px;background:var(--cream);border:1.5px solid var(--border);border-radius:10px;margin-bottom:8px;}
+    .quote-service-info{flex:1;min-width:0;}
+    .quote-service-name{font-size:13px;font-weight:700;color:var(--teal-dark);}
+    .quote-service-detail{font-size:11px;color:var(--muted);margin-top:2px;}
+    .quote-service-price{font-size:13px;font-weight:700;color:var(--accent);white-space:nowrap;}
+    .quote-remove-btn{width:28px;height:28px;border-radius:50%;border:1.5px solid #d7a0a0;background:#fff;color:#b43b3b;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+
     /* CUSTOM SEWING ITEMS */
     .sewing-grid{display:flex;flex-direction:column;gap:10px;}
     .sewing-item{background:var(--cream);border-radius:12px;border:1.5px solid var(--border);padding:14px 16px;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;gap:14px;}
@@ -346,11 +359,17 @@
             <span id="qty-total-formula"></span>
             <span class="qty-total-amt" id="qty-total-amt"></span>
           </div>
+          <button type="button" class="add-service-btn" onclick="addServiceToQuote()">＋ Add This Service to Quote</button>
+
+          <div class="quote-services" id="quote-services">
+            <div class="alt-section-label" style="margin-top:4px;">Services Added to Quote</div>
+            <div id="quote-service-list"></div>
+          </div>
 
           <div class="form-grid" style="margin-top:14px;">
             <div class="form-group">
               <label>Urgency</label>
-              <select id="urgency">
+              <select id="urgency" onchange="updateAltEst()">
                 <option value="standard">Standard (1–2 weeks)</option>
                 <option value="rush">Rush (3–5 days, +25%)</option>
                 <option value="super">Super Rush (1–2 days, +50%)</option>
@@ -678,6 +697,7 @@
 
   // ── ALTERATION ICON SELECTION ──
   let selGarment = null, selGarmentLabel = '', selService = null, selServiceLabel = '', selServiceEst = 0;
+  let selectedServices = {};
 
   function selectGarment(val, el) {
     selGarment = val;
@@ -686,21 +706,19 @@
     document.querySelectorAll('.icon-card').forEach(c => c.classList.remove('selected'));
     el.classList.add('selected');
     document.getElementById('service-section').style.display = 'block';
-    // Reset service selection when garment changes
+
+    // A new garment starts a new service quote.
     selService = null; selServiceLabel = ''; selServiceEst = 0;
+    selectedServices = {};
     document.getElementById('service').value = '';
     document.querySelectorAll('.svc-icon-item').forEach(c => c.classList.remove('selected'));
     document.getElementById('qty-urgency-section').style.display = 'none';
     document.getElementById('est-box').style.display = 'none';
-    // Filter services based on garment type
+    renderSelectedServices();
+
     document.querySelectorAll('.svc-icon-item').forEach(item => {
       const allowed = item.getAttribute('data-garments');
-      if (allowed) {
-        // Only show if garment is in allowed list
-        item.style.display = allowed.split(',').includes(val) ? 'flex' : 'none';
-      } else {
-        item.style.display = 'flex'; // show all items with no restriction
-      }
+      item.style.display = !allowed || allowed.split(',').includes(val) ? 'flex' : 'none';
     });
     el.scrollIntoView({behavior:'smooth', block:'nearest'});
   }
@@ -711,10 +729,12 @@
     document.querySelectorAll('.svc-icon-item').forEach(c => c.classList.remove('selected'));
     el.classList.add('selected');
     document.getElementById('qty-urgency-section').style.display = 'block';
-    // Reset qty to 1 on new service selection
-    document.getElementById('qty').value = 1;
-    document.getElementById('qty-display').textContent = 1;
-    updateAltEst();
+
+    const existing = selectedServices[val];
+    const qty = existing ? existing.qty : 1;
+    document.getElementById('qty').value = qty;
+    document.getElementById('qty-display').textContent = qty;
+    updateCurrentServicePrice();
     el.scrollIntoView({behavior:'smooth', block:'nearest'});
   }
 
@@ -724,39 +744,94 @@
     const next = Math.max(1, Math.min(20, current + delta));
     input.value = next;
     document.getElementById('qty-display').textContent = next;
-    updateAltEst();
+    updateCurrentServicePrice();
   }
 
-  function updateAltEst() {
+  function updateCurrentServicePrice() {
     const qty = parseInt(document.getElementById('qty')?.value) || 1;
-    const box = document.getElementById('est-box');
-    if (!selGarment || !selService) { box.style.display = 'none'; return; }
-    const base = selServiceEst;
     const mult = GMU[selGarment] || 1;
-    const unitPrice = base * mult;
-    const est = unitPrice * qty;
-
-    // Update counter sublabel
+    const unitPrice = selServiceEst * mult;
+    const total = unitPrice * qty;
     const sublabel = document.getElementById('qty-price-each');
-    if (sublabel && base > 0) sublabel.textContent = `$${unitPrice.toFixed(0)} each`;
-
-    // Show/update live total row
     const totalRow = document.getElementById('qty-total-row');
-    const totalFormula = document.getElementById('qty-total-formula');
-    const totalAmt = document.getElementById('qty-total-amt');
-    if (base > 0 && qty > 1) {
+
+    if (sublabel) sublabel.textContent = selServiceEst > 0 ? `$${unitPrice.toFixed(0)} each` : 'Price determined after inspection';
+    if (selServiceEst > 0 && qty > 1) {
       totalRow.style.display = 'flex';
-      totalFormula.textContent = `$${unitPrice.toFixed(0)} × ${qty} items`;
-      totalAmt.textContent = `$${est.toFixed(0)}`;
+      document.getElementById('qty-total-formula').textContent = `$${unitPrice.toFixed(0)} × ${qty} items`;
+      document.getElementById('qty-total-amt').textContent = `$${total.toFixed(0)}`;
     } else {
       totalRow.style.display = 'none';
     }
+  }
 
-    // Estimate box
-    let html = `<div class="est-line"><span>${selGarmentLabel} — ${selServiceLabel}</span><span>$${base > 0 ? unitPrice.toFixed(0) : 'TBD'} each</span></div>`;
-    if (qty > 1) html += `<div class="est-line"><span>${qty} items × $${unitPrice.toFixed(0)}</span><span style="font-weight:700;color:var(--teal)">= $${est.toFixed(0)}</span></div>`;
+  function addServiceToQuote() {
+    if (!selService) return;
+    selectedServices[selService] = {
+      id: selService,
+      label: selServiceLabel,
+      base: selServiceEst,
+      qty: parseInt(document.getElementById('qty')?.value) || 1
+    };
+    renderSelectedServices();
+    updateAltEst();
+  }
+
+  function removeServiceFromQuote(id) {
+    delete selectedServices[id];
+    document.querySelector(`.svc-icon-item[data-val="${id}"]`)?.classList.remove('selected');
+    if (selService === id) {
+      selService = null; selServiceLabel = ''; selServiceEst = 0;
+      document.getElementById('service').value = '';
+      document.getElementById('qty-urgency-section').style.display = 'none';
+    }
+    renderSelectedServices();
+    updateAltEst();
+  }
+
+  function renderSelectedServices() {
+    const wrap = document.getElementById('quote-services');
+    const list = document.getElementById('quote-service-list');
+    if (!wrap || !list) return;
+    const services = Object.values(selectedServices);
+    wrap.classList.toggle('show', services.length > 0);
+    list.innerHTML = services.map(item => {
+      const unit = item.base * (GMU[selGarment] || 1);
+      const total = unit * item.qty;
+      return `<div class="quote-service-row">
+        <div class="quote-service-info">
+          <div class="quote-service-name">${item.label}</div>
+          <div class="quote-service-detail">Quantity: ${item.qty}${item.base > 0 ? ` × $${unit.toFixed(0)} each` : ' · Price TBD'}</div>
+        </div>
+        <div class="quote-service-price">${item.base > 0 ? '$' + total.toFixed(0) : 'TBD'}</div>
+        <button type="button" class="quote-remove-btn" onclick="removeServiceFromQuote('${item.id}')" aria-label="Remove ${item.label}">×</button>
+      </div>`;
+    }).join('');
+  }
+
+  function updateAltEst() {
+    const box = document.getElementById('est-box');
+    const services = Object.values(selectedServices);
+    if (!selGarment || services.length === 0) { box.style.display = 'none'; return; }
+
+    const mult = GMU[selGarment] || 1;
+    let subtotal = 0;
+    let hasTbd = false;
+    let html = services.map(item => {
+      const unit = item.base * mult;
+      const total = unit * item.qty;
+      if (item.base > 0) subtotal += total; else hasTbd = true;
+      return `<div class="est-line"><span>${item.label} × ${item.qty}</span><span>${item.base > 0 ? '$' + total.toFixed(0) : 'TBD'}</span></div>`;
+    }).join('');
+
+    const urgency = document.getElementById('urgency')?.value || 'standard';
+    const rushRate = urgency === 'rush' ? 0.25 : urgency === 'super' ? 0.50 : 0;
+    const rushAmount = subtotal * rushRate;
+    if (rushRate > 0) html += `<div class="est-line"><span>${urgency === 'super' ? 'Super Rush' : 'Rush'} charge (${rushRate * 100}%)</span><span>$${rushAmount.toFixed(0)}</span></div>`;
+
+    const total = subtotal + rushAmount;
     document.getElementById('est-lines').innerHTML = html;
-    document.getElementById('est-total-amt').textContent = est > 0 ? `Starting at $${est.toFixed(0)}` : 'Quote upon inspection';
+    document.getElementById('est-total-amt').textContent = total > 0 ? `Starting at $${total.toFixed(0)}${hasTbd ? ' + TBD item' : ''}` : 'Quote upon inspection';
     box.style.display = 'block';
   }
 
@@ -822,9 +897,10 @@
     const needSew = serviceType === 'custom' || serviceType === 'both';
     const garment = document.getElementById('garment').value;
     const service = document.getElementById('service').value;
+    const alterationServices = Object.values(selectedServices);
 
     if (!fname || !lname || !phone) { errEl.style.display = 'block'; return; }
-    if (needAlt && (!selGarment || !selService)) { errEl.textContent = 'Please select a garment type and service.'; errEl.style.display = 'block'; return; }
+    if (needAlt && (!selGarment || alterationServices.length === 0)) { errEl.textContent = 'Please select a garment type and add at least one service to the quote.'; errEl.style.display = 'block'; return; }
     if (needSew && !selectedSewing) { errEl.textContent = 'Please select a custom sewing project.'; errEl.style.display = 'block'; return; }
     const needEmb = serviceType === 'both';
     if (needEmb && !document.getElementById('emb-item').value.trim()) { errEl.textContent = 'Please describe what you would like embroidered.'; errEl.style.display = 'block'; return; }
@@ -836,7 +912,9 @@
     // Build notes combining both sections
     const sewingItem = selectedSewing ? SEWING_ITEMS[selectedSewing] : null;
     const sewingNote = sewingItem ? `CUSTOM PROJECT: ${sewingItem.name}${sewingItem.perLetter ? ' (' + letterCount + ' letters)' : ''} | Color: ${document.getElementById('sewing-color')?.value || 'Not specified'} | Notes: ${document.getElementById('sewing-notes').value}` : '';
-    const altNote = document.getElementById('alt-notes')?.value || '';
+    const serviceDetailNote = alterationServices.length ? 'ALTERATION SERVICES:\n' + alterationServices.map(item => `- ${item.label} — Qty ${item.qty}`).join('\n') : '';
+    const altNoteText = document.getElementById('alt-notes')?.value || '';
+    const altNote = [serviceDetailNote, altNoteText].filter(Boolean).join('\n\n');
     const dropoffNote = dropoffMethod === 'porch' ? 'DROP-OFF METHOD: Front Porch Drop-Off (no appointment)' : dropoffMethod === 'appointment' ? 'DROP-OFF METHOD: Scheduled Appointment' : '';
     const embNote = serviceType === 'both' ? `EMBROIDERY REQUEST:\nItem: ${document.getElementById('emb-item')?.value || ''}\nDesign: ${document.getElementById('emb-design')?.value || ''}\nPlacement: ${document.getElementById('emb-placement')?.value || 'Not specified'}\nColor: ${document.getElementById('emb-color')?.value || 'Not specified'}` : '';
     const combinedNotes = [altNote, sewingNote, embNote, dropoffNote].filter(Boolean).join('\n\n');
@@ -853,8 +931,8 @@
       phone,
       email:         document.getElementById('email').value,
       garment:       selGarment || document.getElementById('garment').value || 'Custom Sewing',
-      service:       selServiceLabel || (sewingItem ? sewingItem.name : 'Custom Project'),
-      qty:           sewingItem?.perLetter ? letterCount : (parseInt(document.getElementById('qty')?.value) || 1),
+      service:       alterationServices.length ? alterationServices.map(item => `${item.label} (Qty ${item.qty})`).join('; ') : (sewingItem ? sewingItem.name : 'Custom Project'),
+      qty:           alterationServices.length ? alterationServices.reduce((sum,item) => sum + item.qty, 0) : (sewingItem?.perLetter ? letterCount : 1),
       urgency:       document.getElementById('urgency')?.value || 'standard',
       notes:         combinedNotes,
       preferred_date: document.getElementById('pref-date').value || null,
@@ -871,9 +949,9 @@
       // Store for confirmation text
       lastSubmission = {
         fname, phone,
-        service: selServiceLabel || (sewingItem ? sewingItem.name : ''),
+        service: alterationServices.length ? alterationServices.map(item => `${item.label} (Qty ${item.qty})`).join(', ') : (sewingItem ? sewingItem.name : ''),
         garment: selGarmentLabel || selGarment || '',
-        qty: sewingItem?.perLetter ? letterCount : (parseInt(document.getElementById('qty')?.value) || 1),
+        qty: alterationServices.length ? alterationServices.reduce((sum,item) => sum + item.qty, 0) : (sewingItem?.perLetter ? letterCount : 1),
         dropoff: dropoffMethod,
         date: document.getElementById('pref-date')?.value || '',
         time: document.getElementById('pref-time')?.value || '',
