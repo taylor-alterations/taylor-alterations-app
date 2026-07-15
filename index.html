@@ -507,6 +507,18 @@
         </div>
       </div>
 
+      <div id="sewing-banner-color-row" class="form-group full" style="margin-top:12px;display:none;">
+        <label>Color / Fabric Preference</label>
+        <input id="sewing-banner-color" placeholder="e.g. Ivory, navy..."/>
+      </div>
+
+      <button type="button" class="add-service-btn" id="add-sewing-btn" style="display:none;margin-top:12px;" onclick="addSewingToQuote()">＋ Add This Custom Item to Quote</button>
+
+      <div class="quote-services" id="sewing-quote-services">
+        <div class="alt-section-label" style="margin-top:4px;">Custom Items Added to Quote</div>
+        <div id="sewing-quote-list"></div>
+      </div>
+
       <div class="form-group full" style="margin-top:12px;">
         <label>Custom Project Notes</label>
         <textarea id="sewing-notes" placeholder="Any details — name to embroider, colors, size, occasion..."></textarea>
@@ -679,6 +691,8 @@
   let serviceType = 'alterations';
   let selectedSewing = null;
   let letterCount = 1;
+  let selectedSewingItems = {};
+
 
   // ── TYPE TOGGLE ──
   function switchType(type) {
@@ -844,31 +858,18 @@
     box.style.display = 'block';
   }
 
-  // ── SEWING TOGGLE ──
+  // ── CUSTOM SEWING MULTI-ITEM QUOTE ──
   function toggleSewing(id) {
-    if (selectedSewing === id) {
-      // Deselect
-      selectedSewing = null;
-      document.getElementById('sew-'+id).classList.remove('selected');
-      document.getElementById('sew-icon-'+id).style.filter = '';
-      document.getElementById('banner-letters').classList.remove('show');
-      document.getElementById('sewing-qty-row').style.display = 'none';
-      document.getElementById('sewing-est').style.display = 'none';
-    } else {
-      // Deselect previous
-      if (selectedSewing) {
-        document.getElementById('sew-'+selectedSewing).classList.remove('selected');
-        document.getElementById('sew-icon-'+selectedSewing).style.filter = '';
-      }
-      selectedSewing = id;
-      document.getElementById('sew-'+id).classList.add('selected');
+    selectedSewing = id;
+    document.querySelectorAll('.sewing-item').forEach(item => item.classList.remove('selected'));
+    document.getElementById('sew-'+id).classList.add('selected');
 
-      // Show letter count or qty
-      const isBanner = SEWING_ITEMS[id]?.perLetter;
-      document.getElementById('banner-letters').classList.toggle('show', isBanner);
-      document.getElementById('sewing-qty-row').style.display = isBanner ? 'none' : 'block';
-      updateSewingEst();
-    }
+    const isBanner = SEWING_ITEMS[id]?.perLetter;
+    document.getElementById('banner-letters').classList.toggle('show', isBanner);
+    document.getElementById('sewing-qty-row').style.display = isBanner ? 'none' : 'block';
+    document.getElementById('sewing-banner-color-row').style.display = isBanner ? 'flex' : 'none';
+    document.getElementById('add-sewing-btn').style.display = 'block';
+    updateSewingEst();
   }
 
   function changeLetters(delta, e) {
@@ -881,18 +882,101 @@
 
   function updateSewingEst() {
     const estEl = document.getElementById('sewing-est');
-    if (!selectedSewing) { estEl.style.display = 'none'; return; }
+    if (!selectedSewing) {
+      renderSewingQuote();
+      return;
+    }
     const item = SEWING_ITEMS[selectedSewing];
-    if (!item || item.price === 0) { estEl.style.display = 'none'; return; }
+    if (!item) return;
 
     const qty = item.perLetter ? letterCount : (parseInt(document.getElementById('sewing-qty')?.value) || 1);
     const total = item.price * qty;
-    const unitLabel = item.perLetter ? `${qty} letters × $${item.price}` : `${qty > 1 ? qty + ' × $' + item.price : '$' + item.price + ' each'}`;
+    const unitLabel = item.perLetter ? `${qty} letters × $${item.price}` : `${qty} × $${item.price} each`;
 
     document.getElementById('sewing-est-lines').innerHTML =
-      `<div class="sewing-est-line"><span>${item.name}</span><span></span></div>
-       <div class="sewing-est-line"><span style="color:var(--muted)">${unitLabel}</span><span style="font-weight:700">$${total.toFixed(0)}</span></div>`;
-    document.getElementById('sewing-est-total').textContent = `$${total.toFixed(0)}`;
+      `<div class="sewing-est-line"><span>Current selection: ${item.name}</span><span>${item.price > 0 ? '$' + total.toFixed(0) : 'TBD'}</span></div>
+       <div class="sewing-est-line"><span style="color:var(--muted)">${item.price > 0 ? unitLabel : 'Price determined after review'}</span><span></span></div>`;
+    renderSewingQuote();
+  }
+
+  function addSewingToQuote() {
+    if (!selectedSewing) return;
+    const item = SEWING_ITEMS[selectedSewing];
+    const qty = item.perLetter ? letterCount : Math.max(1, parseInt(document.getElementById('sewing-qty')?.value) || 1);
+    const color = item.perLetter
+      ? (document.getElementById('sewing-banner-color')?.value.trim() || '')
+      : (document.getElementById('sewing-color')?.value.trim() || '');
+    const key = selectedSewing;
+
+    selectedSewingItems[key] = {
+      id: selectedSewing,
+      name: item.name,
+      price: item.price,
+      perLetter: item.perLetter,
+      qty,
+      color
+    };
+
+    renderSewingQuote();
+    document.querySelectorAll('.sewing-item').forEach(el => el.classList.remove('selected'));
+    selectedSewing = null;
+    document.getElementById('banner-letters').classList.remove('show');
+    document.getElementById('sewing-qty-row').style.display = 'none';
+    document.getElementById('sewing-banner-color-row').style.display = 'none';
+    document.getElementById('add-sewing-btn').style.display = 'none';
+    document.getElementById('sewing-qty').value = 1;
+  }
+
+  function removeSewingFromQuote(id) {
+    delete selectedSewingItems[id];
+    renderSewingQuote();
+  }
+
+  function renderSewingQuote() {
+    const items = Object.values(selectedSewingItems);
+    const wrap = document.getElementById('sewing-quote-services');
+    const list = document.getElementById('sewing-quote-list');
+    wrap.classList.toggle('show', items.length > 0);
+
+    list.innerHTML = items.map(item => {
+      const total = item.price * item.qty;
+      const qtyText = item.perLetter ? `${item.qty} letters` : `Quantity: ${item.qty}`;
+      const colorText = item.color ? ` · ${item.color}` : '';
+      return `<div class="quote-service-row">
+        <div class="quote-service-info">
+          <div class="quote-service-name">${item.name}</div>
+          <div class="quote-service-detail">${qtyText}${colorText}</div>
+        </div>
+        <div class="quote-service-price">${item.price > 0 ? '$' + total.toFixed(0) : 'TBD'}</div>
+        <button type="button" class="quote-remove-btn" onclick="removeSewingFromQuote('${item.id}')" aria-label="Remove ${item.name}">×</button>
+      </div>`;
+    }).join('');
+
+    const pricedTotal = items.reduce((sum, item) => sum + (item.price * item.qty), 0);
+    const hasTbd = items.some(item => item.price === 0);
+    const estEl = document.getElementById('sewing-est');
+
+    if (items.length === 0 && !selectedSewing) {
+      estEl.style.display = 'none';
+      return;
+    }
+
+    let lines = items.map(item => {
+      const total = item.price * item.qty;
+      const qtyText = item.perLetter ? `${item.qty} letters` : `Qty ${item.qty}`;
+      return `<div class="sewing-est-line"><span>${item.name} (${qtyText})</span><span>${item.price > 0 ? '$' + total.toFixed(0) : 'TBD'}</span></div>`;
+    }).join('');
+
+    if (selectedSewing) {
+      const current = SEWING_ITEMS[selectedSewing];
+      const currentQty = current.perLetter ? letterCount : (parseInt(document.getElementById('sewing-qty')?.value) || 1);
+      lines += `<div class="sewing-est-line" style="color:var(--muted)"><span>Current selection not yet added: ${current.name}</span><span>${current.price > 0 ? '$' + (current.price * currentQty).toFixed(0) : 'TBD'}</span></div>`;
+    }
+
+    document.getElementById('sewing-est-lines').innerHTML = lines;
+    document.getElementById('sewing-est-total').textContent = pricedTotal > 0
+      ? `$${pricedTotal.toFixed(0)}${hasTbd ? ' + TBD item' : ''}`
+      : (hasTbd ? 'Quote needed' : '$0');
     estEl.style.display = 'block';
   }
 
@@ -907,10 +991,11 @@
     const garment = document.getElementById('garment').value;
     const service = document.getElementById('service').value;
     const alterationServices = Object.values(selectedServices);
+    const sewingItems = Object.values(selectedSewingItems);
 
     if (!fname || !lname || !phone) { errEl.style.display = 'block'; return; }
     if (needAlt && alterationServices.length === 0) { errEl.textContent = 'Please select a garment type and add at least one service to the quote.'; errEl.style.display = 'block'; return; }
-    if (needSew && !selectedSewing) { errEl.textContent = 'Please select a custom sewing project.'; errEl.style.display = 'block'; return; }
+    if (needSew && sewingItems.length === 0) { errEl.textContent = 'Please add at least one custom sewing project to the quote.'; errEl.style.display = 'block'; return; }
     const needEmb = serviceType === 'both';
     if (needEmb && !document.getElementById('emb-item').value.trim()) { errEl.textContent = 'Please describe what you would like embroidered.'; errEl.style.display = 'block'; return; }
 
@@ -919,8 +1004,9 @@
     btn.disabled = true; btn.textContent = 'Submitting...';
 
     // Build notes combining both sections
-    const sewingItem = selectedSewing ? SEWING_ITEMS[selectedSewing] : null;
-    const sewingNote = sewingItem ? `CUSTOM PROJECT: ${sewingItem.name}${sewingItem.perLetter ? ' (' + letterCount + ' letters)' : ''} | Color: ${document.getElementById('sewing-color')?.value || 'Not specified'} | Notes: ${document.getElementById('sewing-notes').value}` : '';
+    const sewingNote = sewingItems.length ? `CUSTOM PROJECTS:
+${sewingItems.map(item => `- ${item.name} — ${item.perLetter ? item.qty + ' letters' : 'Qty ' + item.qty}${item.color ? ' | Color/Fabric: ' + item.color : ''}`).join('\n')}
+Project Notes: ${document.getElementById('sewing-notes').value || 'None'}` : '';
     const serviceDetailNote = alterationServices.length ? 'ALTERATION SERVICES:\n' + alterationServices.map(item => `- ${item.garmentLabel}: ${item.label} — Qty ${item.qty}`).join('\n') : '';
     const altNoteText = document.getElementById('alt-notes')?.value || '';
     const altNote = [serviceDetailNote, altNoteText].filter(Boolean).join('\n\n');
@@ -940,8 +1026,8 @@
       phone,
       email:         document.getElementById('email').value,
       garment:       alterationServices.length ? [...new Set(alterationServices.map(item => item.garmentLabel))].join('; ') : 'Custom Sewing',
-      service:       alterationServices.length ? alterationServices.map(item => `${item.garmentLabel}: ${item.label} (Qty ${item.qty})`).join('; ') : (sewingItem ? sewingItem.name : 'Custom Project'),
-      qty:           alterationServices.length ? alterationServices.reduce((sum,item) => sum + item.qty, 0) : (sewingItem?.perLetter ? letterCount : 1),
+      service:       [alterationServices.map(item => `${item.garmentLabel}: ${item.label} (Qty ${item.qty})`).join('; '), sewingItems.map(item => `${item.name} (${item.perLetter ? item.qty + ' letters' : 'Qty ' + item.qty})`).join('; ')].filter(Boolean).join('; '),
+      qty:           alterationServices.reduce((sum,item) => sum + item.qty, 0) + sewingItems.reduce((sum,item) => sum + item.qty, 0),
       urgency:       document.getElementById('urgency')?.value || 'standard',
       notes:         combinedNotes,
       preferred_date: document.getElementById('pref-date').value || null,
@@ -958,9 +1044,9 @@
       // Store for confirmation text
       lastSubmission = {
         fname, phone,
-        service: alterationServices.length ? alterationServices.map(item => `${item.garmentLabel}: ${item.label} (Qty ${item.qty})`).join(', ') : (sewingItem ? sewingItem.name : ''),
+        service: [alterationServices.map(item => `${item.garmentLabel}: ${item.label} (Qty ${item.qty})`).join(', '), sewingItems.map(item => `${item.name} (${item.perLetter ? item.qty + ' letters' : 'Qty ' + item.qty})`).join(', ')].filter(Boolean).join(', '),
         garment: alterationServices.length ? [...new Set(alterationServices.map(item => item.garmentLabel))].join(', ') : '',
-        qty: alterationServices.length ? alterationServices.reduce((sum,item) => sum + item.qty, 0) : (sewingItem?.perLetter ? letterCount : 1),
+        qty: alterationServices.reduce((sum,item) => sum + item.qty, 0) + sewingItems.reduce((sum,item) => sum + item.qty, 0),
         dropoff: dropoffMethod,
         date: document.getElementById('pref-date')?.value || '',
         time: document.getElementById('pref-time')?.value || '',
